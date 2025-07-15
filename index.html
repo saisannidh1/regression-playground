@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Regression Playground</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="sidebar">
+    <h2>AI Regression Playground</h2>
+
+    <label for="functionSelect">Choose a function:</label>
+    <select id="functionSelect">
+      <option value="x*x">x²</option>
+      <option value="x*x*x">x³</option>
+      <option value="Math.sin(x)">sin(x)</option>
+      <option value="Math.log(x)">log(x)</option>
+    </select>
+
+    <label for="numLayersInput">Hidden Layers:</label>
+    <input type="number" id="numLayersInput" value="2" min="0" onchange="rebuildLayerInputs()" />
+    <button onclick="addLayerInput()">Add Hidden Layer</button>
+
+    <div id="layerInputsContainer"></div>
+
+    <label for="epochsInput">Epochs:</label>
+    <input type="number" id="epochsInput" value="200" min="1" />
+
+    <button onclick="trainModel()">Train Model</button>
+
+    <h3>Try Prediction</h3>
+    <input type="number" id="predictInput" placeholder="Enter X value">
+    <button onclick="predictValue()">Predict</button>
+    <p id="predictResult"></p>
+
+    <button onclick="toggleInfo()" style="margin-top: 20px;">ℹ️ Model Info</button>
+    <div id="infoBox" style="display: none; margin-top: 10px; font-size: 13px; color: #555; line-height: 1.4;"></div>
+  </div>
+
+  <div class="main">
+    <div>
+      <h3>Loss Over Epochs</h3>
+      <canvas id="lossChart" width="600" height="300"></canvas>
+    </div>
+
+    <div>
+      <h3>Predicted vs True Values</h3>
+      <canvas id="compareChart" width="600" height="300"></canvas>
+    </div>
+  </div>
+
+  <script>
+    function rebuildLayerInputs() {
+      const count = parseInt(document.getElementById("numLayersInput").value);
+      const container = document.getElementById("layerInputsContainer");
+      container.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        addLayerInput(100);
+      }
+    }
+
+    function addLayerInput(defaultValue = 100) {
+      const container = document.getElementById("layerInputsContainer");
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "layerInputGroup";
+
+      const label = document.createElement("span");
+      label.className = "layerLabel";
+      label.innerText = `Layer ${container.children.length + 1}`;
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = "1";
+      input.value = defaultValue;
+      input.placeholder = "Neurons";
+      input.className = "layerNeuronInput";
+      input.title = "Number of neurons in this hidden layer";
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.innerText = "✖";
+      deleteBtn.className = "deleteLayerBtn";
+      deleteBtn.title = "Delete this layer";
+      deleteBtn.onclick = () => {
+        container.removeChild(wrapper);
+        updateLayerLabels();
+      };
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
+      wrapper.appendChild(deleteBtn);
+      container.appendChild(wrapper);
+
+      document.getElementById("numLayersInput").value = container.children.length;
+    }
+
+    function updateLayerLabels() {
+      const labels = document.querySelectorAll(".layerLabel");
+      labels.forEach((label, index) => {
+        label.innerText = `Layer ${index + 1}`;
+      });
+      document.getElementById("numLayersInput").value = labels.length;
+    }
+
+    function toggleInfo() {
+      const infoBox = document.getElementById("infoBox");
+      if (infoBox.style.display === "none") {
+        infoBox.style.display = "block";
+        infoBox.innerHTML = `
+          <strong>Neural Network Overview:</strong><br><br>
+          <strong>Architecture:</strong> Fully-connected feedforward network.<br>
+          <strong>Activation:</strong> ReLU on hidden layers, Linear output.<br>
+          <strong>Input:</strong> 1D scalar x value.<br>
+          <strong>Output:</strong> Predicted y for the chosen function.<br>
+          <strong>Normalization:</strong> Inputs and outputs are scaled between 0 and 1 for training stability.<br>
+          <strong>Training:</strong> Uses Stochastic Gradient Descent (SGD) with Mean Squared Error loss.<br>
+          <strong>Visualization:</strong> Real-time loss and prediction vs. true charts.<br>
+          <strong>Prediction:</strong> Enter any x to see predicted y using the trained model.
+        `;
+      } else {
+        infoBox.style.display = "none";
+      }
+    }
+
+    window.onload = rebuildLayerInputs;
+  </script>
+
+  <script src="app.js"></script>
+</body>
+</html>
